@@ -14,9 +14,12 @@ import com.slamtec.slamware.AbstractSlamwarePlatform;
 import com.slamtec.slamware.action.IMoveAction;
 import com.slamtec.slamware.action.MoveDirection;
 import com.slamtec.slamware.discovery.DeviceManager;
+import com.slamtec.slamware.geometry.PointF;
 import com.slamtec.slamware.robot.Location;
 import com.slamtec.slamware.robot.Pose;
 import com.slamtec.slamware.robot.Rotation;
+
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity  implements View.OnClickListener{
 
@@ -30,12 +33,13 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
     private Button btn_r;
     private EditText et_x;
     private EditText et_y;
-    private ToggleButton tb;
+    private ToggleButton btn_nav;
     private AbstractSlamwarePlatform slamwarePlatform;
     private Handler handler;
     private int STATUS_NAVING=0;
     private int STATUS_MANUAL=1;
     private int status=STATUS_MANUAL;
+    private Nav nav_pro;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +64,7 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btn= (Button) findViewById(R.id.button);
         et_x= (EditText) findViewById(R.id.editText_x);
         et_y= (EditText) findViewById(R.id.editText_y);
-        tb= (ToggleButton) findViewById(R.id.toggleButton);
+        btn_nav= (ToggleButton) findViewById(R.id.nav);
     }
 
     /**
@@ -82,11 +86,19 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
         btn_l.setOnClickListener(MainActivity.this);
         btn_r.setOnClickListener(MainActivity.this);
         btn.setOnClickListener(MainActivity.this);
-        tb.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+        btn_nav.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                if(b==false) status=STATUS_MANUAL;
-                else status=STATUS_NAVING;
+                if(b==true){
+                    nav_pro=new Nav();
+                    Location location=slamwarePlatform.getLocation();
+                    float x=Float.parseFloat(et_x.getText().toString());
+                    float y=Float.parseFloat(et_y.getText().toString());
+                    nav_pro.run(slamwarePlatform,new PointF(x,y));
+                    status=STATUS_NAVING;
+                }
+                else status=STATUS_MANUAL;
+
             }
         });
     }
@@ -158,41 +170,47 @@ public class MainActivity extends AppCompatActivity  implements View.OnClickList
                 }
             });
 
+            //路径点
+            try{
+                List<Location> points= slamwarePlatform.getCurrentAction().getRemainingMilestones().getPoints();
+                tv_log.setText("");
+                for (Location location:points)
+                {
+                    tv_log.setText(tv_log.getText()+"("+location.getX()+","+location.getY()+")\n");
+                }
+            }catch (Exception e){
+
+            }
+
             handler.postDelayed(runnable,50);
         }
     };
 
 
-    //地图
-//    private float[][] map={{0.5f,0},{1f,0},{1f,0.5f},{1f,1f},{2f,1f}};
-
     //导航
     private Runnable nav=new Runnable() {
         @Override
         public void run() {
-            if(status==STATUS_NAVING)
-            {
-//                for (int i=0;i<map.length;i++)
-//                {
+//            if(status==STATUS_NAVING)
+//            {
 //
-//                }
-                Location location=slamwarePlatform.getLocation();
-                float x=Float.parseFloat(et_x.getText().toString());
-                float y=Float.parseFloat(et_y.getText().toString());
-
-                //x
-                if(x-location.getX()>1) x=location.getX()+1;
-                else if (x-location.getX()<-1) x=location.getX()-1;
-
-                //y
-                if(y-location.getY()>1) y=location.getY()+1;
-                else if (y-location.getY()<-1) y=location.getY()-1;
-
-
-                tv_log.setText("to("+x+","+y+")");
-                slamwarePlatform.moveTo(new Location(x,y,0));
-            }
-            handler.postDelayed(nav,3000);
+//                Location location=slamwarePlatform.getLocation();
+//                float x=Float.parseFloat(et_x.getText().toString());
+//                float y=Float.parseFloat(et_y.getText().toString());
+//
+//                //x
+//                if(x-location.getX()>1) x=location.getX()+1;
+//                else if (x-location.getX()<-1) x=location.getX()-1;
+//
+//                //y
+//                if(y-location.getY()>1) y=location.getY()+1;
+//                else if (y-location.getY()<-1) y=location.getY()-1;
+//
+//                slamwarePlatform.moveTo(new Location(x,y,0));
+//
+//
+//            }
+//            handler.postDelayed(nav,3000);
         }
     };
 }

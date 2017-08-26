@@ -81,7 +81,7 @@
             android:layout_height="match_parent" />
 
         <ToggleButton
-            android:id="@+id/toggleButton"
+            android:id="@+id/nav"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textOn="导航中"
